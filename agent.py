@@ -1,4 +1,5 @@
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts.chat import MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain.output_parsers import PydanticOutputParser
 from langchain.memory import ConversationBufferMemory
@@ -22,7 +23,7 @@ load_dotenv()
 llm_groq_low_T = ChatGroq(groq_api_key=os.environ.get("GROQ_API_KEY"), model_name="llama3-70b-8192", temperature=0.4)
 llm_groq = ChatGroq(groq_api_key=os.environ.get("GROQ_API_KEY"), model_name="llama3-70b-8192", temperature=0.4)
 
-history = UpstashRedisChatMessageHistory(session_id="chat1", url=os.environ["UPSTASH_URL"],
+history = UpstashRedisChatMessageHistory(session_id="chat2", url=os.environ["UPSTASH_URL"],
                                          token=os.environ["UPSTASH_TOKEN"])
 
 memory = ConversationBufferMemory(
@@ -43,17 +44,14 @@ initial_routing_parser = PydanticOutputParser(pydantic_object=InitialRouting)
 initial_routing_prompt = PromptTemplate(
     template="""
         You are an expert in taking the user input and routing web search or just directly to a simple response.\n
-        
         Use the following criteria to decide how to route the input: \n\n
         
-        if the user input just require a simple response 
-        Just choose 'simple_response' for inputs you can easily answer
-        if the response takes more research, choose 'web_search'
+        last messages: {chat_history}
         
-        Check if the information to answer the question is not already in the chat history.
-        
-        Chat History: {chat_history}
-        
+        If the user asks something, decide if you can answer it on your own, or it has to be searched via internet.
+        if the answer is easy, choose 'simple_response' and give no search query
+        if research needed choose 'web_search' and build a test query for a search engine to search for that info. 
+                
         {format_instructions}
         
         User input to route: {user_input}
@@ -62,21 +60,20 @@ initial_routing_prompt = PromptTemplate(
 
 initial_routing_chain = initial_routing_prompt | llm_groq_low_T | initial_routing_parser
 
-final_prompt = PromptTemplate(
-    template="""
-        You are Mark, a personal assistant for Nico, your creator, 
+final_prompt = ChatPromptTemplate.from_messages([
+    ("system", """
+        You are Mark, a personal assistant for Nico, your creator,
         you an expert in answering user inputs, figure out if the answer needs to be searched via internet,
         or, on the other hand, you can answer it straightaway or with the information present in the chat history\n.
-        If there is no context just answer normally.
-        
-        Chat History: {chat_history}
-        
+        If there is no context just answer normally.\n
+
         If the user asks in spanish, answer in spanish, otherwise answer in english.\n
-        User input: {user_input} \n
-        context:{context}\n
-        
-        If you dont know the answer just answer 'i dont know'
-        """, input_variables=["user_input", "context", "chat_history"])
+
+        Available context: {context}\n
+
+        If you dont know the answer just answer 'i dont know'"""),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("user", "{user_input}")])
 
 final_chain = final_prompt | llm_groq | StrOutputParser()
 
@@ -88,7 +85,8 @@ while True:
         print("Turning off, bye Nico, see you later,")
         break
 
-    res = initial_routing_chain.invoke({"user_input": user_input, "chat_history": history})
+    chat_history = memory.chat_memory.messages[::-1]
+    res = initial_routing_chain.invoke({"user_input": user_input, "chat_history": chat_history[0:6]})
 
     GraphState.initial_routing = res.routing
     GraphState.search_query = res.search_query
@@ -100,7 +98,9 @@ while True:
         GraphState.search_info = [x["content"] for x in search_res]
         print(GraphState.search_info)
 
-    res = final_chain.invoke({"user_input": user_input, "context": GraphState.search_info, "chat_history": history})
+    print(chat_history)
+    res = final_chain.invoke(
+        {"user_input": user_input, "context": GraphState.search_info, "chat_history": chat_history})
 
     memory.chat_memory.add_ai_message(res)
     print(res)

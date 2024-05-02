@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c494ac92-1aa3-4c36-bad4-1f42d4e892df" name="Changes" comment="initial commit">
-      <change afterPath="$PROJECT_DIR$/graph_state.py" afterDir="false" />
+    <list default="true" id="c494ac92-1aa3-4c36-bad4-1f42d4e892df" name="Changes" comment="Groq-llama3 implementation with history">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +28,9 @@
     &quot;accountId&quot;: &quot;bb20977f-9300-4063-b20d-86575c505b39&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/agent.py" root0="SKIP_HIGHLIGHTING" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -76,11 +77,20 @@
       <option name="project" value="LOCAL" />
       <updated>1714599311973</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Groq-llama3 implementation with history">
+      <option name="closed" value="true" />
+      <created>1714671295789</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1714671295789</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
+    <MESSAGE value="Groq-llama3 implementation with history" />
+    <option name="LAST_COMMIT_MESSAGE" value="Groq-llama3 implementation with history" />
   </component>
 </project>
