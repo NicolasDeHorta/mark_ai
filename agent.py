@@ -36,7 +36,7 @@ memory = ConversationBufferMemory(
 class InitialRouting(BaseModel):
     routing: str = Field(description="Binary decision, 'web_search' or 'simple_response'")
     search_query: str = Field(
-        description="if routing is 'web_search', the text query to search for the information to respond")
+        description="Full query prompt for a search engine, really especific and detailed to obtain the data")
 
 
 initial_routing_parser = PydanticOutputParser(pydantic_object=InitialRouting)
@@ -50,7 +50,8 @@ initial_routing_prompt = PromptTemplate(
         
         If the user asks something, decide if you can answer it on your own, or it has to be searched via internet.
         if the answer is easy, choose 'simple_response' and give no search query
-        if research needed choose 'web_search' and build a test query for a search engine to search for that info. 
+        if research needed choose 'web_search' and build a text query for a search engine to search for that info.
+        The text query should include all the words to search, dont omit or refer to context data, name the data explicitly 
                 
         {format_instructions}
         
@@ -85,8 +86,8 @@ while True:
         print("Turning off, bye Nico, see you later,")
         break
 
-    chat_history = memory.chat_memory.messages[::-1]
-    res = initial_routing_chain.invoke({"user_input": user_input, "chat_history": chat_history[0:6]})
+    chat_history = memory.chat_memory.messages
+    res = initial_routing_chain.invoke({"user_input": user_input, "chat_history": chat_history[::-1][0:15]})
 
     GraphState.initial_routing = res.routing
     GraphState.search_query = res.search_query
@@ -98,9 +99,9 @@ while True:
         GraphState.search_info = [x["content"] for x in search_res]
         print(GraphState.search_info)
 
-    print(chat_history)
     res = final_chain.invoke(
         {"user_input": user_input, "context": GraphState.search_info, "chat_history": chat_history})
 
+    print(chat_history[::-1][0:6])
     memory.chat_memory.add_ai_message(res)
     print(res)
